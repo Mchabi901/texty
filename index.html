@@ -109,7 +109,7 @@
 
   <script>
     const username = prompt("Enter your username 👤") || "Anonymous";
-    const ws = new WebSocket("wss://" + window.location.host);
+    let socket = new WebSocket("wss://texty-production.up.railway.app");
     const chat = document.getElementById("chat");
     const input = document.getElementById("msg");
     const usersList = document.getElementById("users");
