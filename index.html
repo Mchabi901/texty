@@ -124,61 +124,58 @@
     <button onclick="sendMessage()">Send 🚀</button>
   </div>
 
-  <script>
-    const username = prompt("Enter your username 👤") || "Anonymous";
-    const chatBox = document.getElementById("chat");
-    const input = document.getElementById("msg");
-    const usersList = document.getElementById("users");
+<script>
+  const username = prompt("Enter your username 👤") || "Anonymous";
+  const ws = new WebSocket("wss://texty-production.up.railway.app/ws");  // ✅ Correctly define ws
 
-    new WebSocket("wss://texty-production.up.railway.app/ws")
+  const chatBox = document.getElementById("chat");
+  const input = document.getElementById("msg");
+  const usersList = document.getElementById("users");
 
+  function getTime() {
+    const now = new Date();
+    return now.toTimeString().slice(0, 5);
+  }
 
+  function appendMessage(text, sender = "other") {
+    const div = document.createElement("div");
+    div.className = "message " + (sender === "you" ? "you" : "other");
+    div.textContent = `[${getTime()}] ${text}`;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
 
-    function getTime() {
-      const now = new Date();
-      return now.toTimeString().slice(0, 5);
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ type: "join", name: username }));
+  };
+
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+
+    if (data.type === "chat") {
+      appendMessage(`${data.name}: ${data.text}`, data.name === username ? "you" : "other");
     }
 
-    function appendMessage(text, sender = "other") {
-      const div = document.createElement("div");
-      div.className = "message " + (sender === "you" ? "you" : "other");
-      div.textContent = `[${getTime()}] ${text}`;
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
+    if (data.type === "users") {
+      usersList.textContent = data.list.join(", ");
     }
+  };
 
-    ws.addEventListener("open", () => {
-      ws.send(JSON.stringify({ type: "join", name: username }));
-    });
+  input.addEventListener("keypress", e => {
+    if (e.key === "Enter") sendMessage();
+  });
 
-    ws.addEventListener("message", (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        if (data.type === "chat") {
-          appendMessage(`${data.name}: ${data.text}`, data.name === username ? "you" : "other");
-        }
-        if (data.type === "users") {
-          usersList.textContent = data.list.join(", ");
-        }
-      } catch (err) {
-        console.error("Invalid message format:", e.data);
-      }
-    });
-
-    input.addEventListener("keypress", e => {
-      if (e.key === "Enter") sendMessage();
-    });
-
-    function sendMessage() {
-      const msg = input.value.trim();
-      if (msg !== "" && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: "chat", name: username, text: msg }));
-        appendMessage(`${username}: ${msg}`, "you");
-        input.value = "";
-      } else if (ws.readyState !== WebSocket.OPEN) {
-        alert("Connection is not open. Please wait...");
-      }
+  function sendMessage() {
+    const msg = input.value.trim();
+    if (msg !== "" && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: "chat", name: username, text: msg }));
+      appendMessage(`${username}: ${msg}`, "you");
+      input.value = "";
+    } else if (ws.readyState !== WebSocket.OPEN) {
+      alert("Connection is not open. Please wait...");
     }
-  </script>
+  }
+</script>
+
 </body>
 </html>
