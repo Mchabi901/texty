@@ -130,7 +130,8 @@
     const input = document.getElementById("msg");
     const usersList = document.getElementById("users");
 
-    let ws = new WebSocket("wss://texty-production.up.railway.app");
+    let ws = new WebSocket("ws://texty-production.up.railway.app:8080");
+
 
     function getTime() {
       const now = new Date();
